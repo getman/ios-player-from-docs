@@ -12,5 +12,7 @@
 int main(int argc, char * argv[]) {
     @autoreleasepool {
         return UIApplicationMain(argc, argv, nil, NSStringFromClass([AppDelegate class]));
+        /**UIApplicationMain creates a new application instance and its delegate*/
+//        return UIApplicationMain(argc, argv, nil, @"MyAppDelegate");
     }
 }
