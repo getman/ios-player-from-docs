@@ -11,10 +11,11 @@
 @implementation PlayerRootView
 
 @synthesize songsTblView = songsTableView;
+@synthesize playerController = _playerController;
 
 - (id)initWithFrame:(CGRect)theFrame {
     self = [super initWithFrame:theFrame];
-    NSLog(@"Player root view loaded");
+    NSLog(@"Player root view loading");
     [self loadUI];
     return self;
 }
@@ -28,7 +29,8 @@
     CGFloat x = 0;
     CGFloat y = 40;
     CGFloat width = self.frame.size.width;
-    CGFloat height = self.frame.size.height - 50;
+    // -65 - the pixels for the player contol pannel
+    CGFloat height = self.frame.size.height - 65;
     CGRect tableFrame = CGRectMake(x, y, width, height);
     
     UITableView *tableView = [[UITableView alloc]initWithFrame:tableFrame style:UITableViewStylePlain];
@@ -60,8 +62,13 @@
     [label sizeToFit];
     //add label to view
     [self addSubview:label];
-    
+    NSLog(@"Player root view loaded");
 
+    CGRect playerControlPanelFrame = CGRectMake(x, height, width, 65);
+    //creating new player controller
+    AVPlayerController* avPlayerController = [[AVPlayerController alloc] initWithPanel: playerControlPanelFrame];
+    [self setPlayerController: avPlayerController];
+    [self addSubview: [avPlayerController playerControlPannel]];
 }
 
 @end

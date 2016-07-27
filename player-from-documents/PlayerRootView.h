@@ -7,12 +7,17 @@
 //
 
 #import <UIKit/UIKit.h>
+#import "AVPlayerController.h"
 
 @interface PlayerRootView : UIView {
     /**table view with songs*/
-    UITableView *songsTableView;
+    UITableView* _songsTableView;
+    
+    AVPlayerController* _playerController;
 }
 
-@property (nonatomic, strong) IBOutlet UITableView *songsTblView;
+@property (nonatomic, strong) UITableView* songsTblView;
+@property (nonatomic, strong) AVPlayerController* playerController;
+
 
 @end

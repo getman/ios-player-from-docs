@@ -8,6 +8,10 @@
 
 #import "ViewController.h"
 #import "PlayerRootView.h"
+#import "SoundtrackTableCell.h"
+#import "Util.h"
+#import "Mp3Metadata.h"
+
 
 @interface ViewController ()
 
@@ -15,48 +19,72 @@
 
 @implementation ViewController
 
-    //------Data members-------
-    /**list of files from Document folder*/
-    NSArray *fileList;
-
     //-----Methods----------
 - (void)viewDidLoad {
     [super viewDidLoad];
     
     //creating the custom view with inner table view
-    PlayerRootView *rootView;
-    rootView = [[PlayerRootView alloc]initWithFrame:[UIScreen mainScreen].applicationFrame];
-    self.view = rootView;
+    PlayerRootView *newRootView;
+    newRootView = [[PlayerRootView alloc]initWithFrame:[UIScreen mainScreen].applicationFrame];
+    self->rootView = newRootView;
+    self.view = newRootView;
     
     //set up delegate and datasource for table view with songs
-    rootView.songsTblView.delegate = self;
-    rootView.songsTblView.dataSource = self;
+    newRootView.songsTblView.delegate = self;
+    newRootView.songsTblView.dataSource = self;
     
-    [self.view addSubview: rootView.songsTblView];
-    [self loadFiles];
-    
+    [self.view addSubview: newRootView.songsTblView];
 }
 
 - (void)didReceiveMemoryWarning {
     [super didReceiveMemoryWarning];
 }
 
-/**returns table`s rows amount, method from the ... protocol*/
+
+/**delegate method
+ called when user tapped a UITAbleCellView*/
+- (void) tableView: (UITableView *) tableView didSelectRowAtIndexPath: (NSIndexPath *) indexPath {
+    int currentRow = [indexPath row];
+    NSLog(@"Table cell at index %i was tapped", currentRow);
+    
+    NSString* fileFullName = [[self->rootView playerController] getTrackURL:currentRow];
+    NSLog(@"track is: %@", fileFullName);
+    NSURL *fileURL = [NSURL fileURLWithPath: fileFullName];
+    [[self->rootView playerController] addTrackToPlayer:fileURL];
+    [[self->rootView playerController] playPause];
+    [[self->rootView playerController] setNowPLaying:fileFullName];
+    
+    
+}
+
+// Tap on row accessory
+- (void) tableView: (UITableView *) tableView accessoryButtonTappedForRowWithIndexPath: (NSIndexPath *) indexPath{
+}
+
+
+
+/**delegeate method
+ returns table`s rows amount, method from the ... protocol*/
 - (NSInteger) tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
-    NSInteger tableCellCount = [fileList count];
-    NSLog(@"row count: %i", tableCellCount);
+    NSInteger tableCellCount = [[self->rootView playerController] getTrackAmount];
+    NSLog(@"row count: %li", tableCellCount);
     return tableCellCount;
 }
 
-/**returns table`s cell. It will be called for every data row from the data source. Method is from ... protocol
+/**delegate method
+ returns table`s cell. It will be called for every data row from the data source. Method is from UITableViewDataSource protocol
  */
 - (UITableViewCell *) tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
-    UITableViewCell *nextTableCell;
+    SoundtrackTableCell *nextTableCell;
     
-    static NSString *cellIdentifier = @"HistoryCell";
-    /**receive next available reusable cell frome the TableView with identifier myTableCell*/
-    nextTableCell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:cellIdentifier];
-    nextTableCell.textLabel.text = @"Testing";
+    static NSString *cellIdentifier = @"mySountrackCell";
+    /**receive next available reusable cell frome the TableView*/
+    nextTableCell = (SoundtrackTableCell *) [self.tblView dequeueReusableCellWithIdentifier:cellIdentifier];
+    NSLog(@"reusable cell requested");
+    if (nextTableCell == nil) {
+        nextTableCell = [[SoundtrackTableCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier: cellIdentifier];
+        NSLog(@"new cell allocated");
+    }
     
     /**received the target table cell row index*/
     NSInteger index = [indexPath row];
@@ -64,32 +92,38 @@
     /**let`s fill the target table cell by data*/
     
     //file name
-    NSString *nextFileName = fileList[index];
-    nextTableCell.textLabel.text = nextFileName;
+    NSString *nextFileFullName = [[self->rootView playerController] getTrackURL: index];
+    
+    Mp3Metadata* nextFileMp3Metadata = (Mp3Metadata*) [Util loadMp3Metadata: nextFileFullName];
+    
+    [nextTableCell labelFileExtension].text = nextFileMp3Metadata.ext;
+    [nextTableCell labelFileSize].text = [NSString stringWithFormat:@"%i", nextFileMp3Metadata.sizeMB];
+    nextTableCell.text = nextFileMp3Metadata.trackName;
+    
     return nextTableCell;
 }
 
-/**Loads/reloads files from the Document folder of iTunes*/
-- (void) loadFiles {
-    NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
-    //path to the Document directory
-    NSString *documentsDirectory = [paths objectAtIndex:0];
-    //array of file path
-    NSArray* filesAtPath = [[NSFileManager defaultManager] contentsOfDirectoryAtPath:documentsDirectory error:NULL];
-    
-    NSEnumerator* itr = [filesAtPath objectEnumerator];
-    NSString* obj;
-    while (obj = [itr nextObject]) {
-        NSLog(@"doc dir: %@", obj);
-    }
-    
-    fileList = [NSArray arrayWithArray:filesAtPath];
+
+
+
+
+/**selector to react to AVPlayer notification: track has ended*/
+-(void)itemDidFinishPlaying:(NSNotification *) notification {
+    // Will be called when AVPlayer finishes playing playerItem
+    NSLog(@"Ther track is over :(");
 }
+
+/**selector to react to AVPlayer notification - volume changed*/
+- (void)volumeChanged:(NSNotification *)notification {
+    float volume =
+    [[[notification userInfo]
+      objectForKey:@"AVSystemController_AudioVolumeNotificationParameter"]
+     floatValue];
+    NSLog(@"Volume changed :( %f", volume);
+    // Do stuff with volume
+}
+
 @end
-
-
-
-
 
 
 

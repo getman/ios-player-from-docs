@@ -7,11 +7,14 @@
 //
 
 #import <UIKit/UIKit.h>
+#import "PlayerRootView.h"
 
 @interface ViewController : UIViewController <UITableViewDataSource, UITableViewDelegate> /**supported protocols*/ {
+    PlayerRootView* rootView;
 }
 
-@property (strong, nonatomic) IBOutlet UITableView *myTableView;
+@property (nonatomic, retain) UILabel *lblFileName;
+@property (nonatomic, retain) UITableView *tblView;
 
 @end
 
